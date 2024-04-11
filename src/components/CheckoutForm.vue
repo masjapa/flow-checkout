@@ -3,47 +3,14 @@
     <div class="checkout_form">
       <StepperForm />
       <div class="back">
-        Back to Cart
+        <span v-if="step === 'deliveryStep'">Back to cart</span>
+        <span v-if="step === 'paymentStep'" @click="nextStep('deliveryStep')">Back to delivery</span>
       </div>
       <div class="form_section">
-        <div class="form_delivery">
-          <div class="delivery_details">
-            <span class="text_color" style="font-size: 35px;">Delivery details</span>
-            <span> <input type="checkbox" name="isCheck" id="check"> Send as dropshipper</span>
-          </div>
-          <div class='some-page-wrapper'>
-            <div class='row'>
-              <div class='column'>
-                <div class='blue-column'>
-                  <input type="text" class="custom-input" placeholder="Name" />
-                </div>
-              </div>
-              <div class='column'>
-                <div class='green-column'>
-                  <input type="text" class="custom-input" placeholder="Dropshipper Name" />
-                </div>
-              </div>
-            </div>
-            <div class='row'>
-              <div class='column'>
-                <div class='blue-column'>
-                  <input type="number" class="custom-input" placeholder="Phone Number" />
-                </div>
-              </div>
-              <div class='column'>
-                <div class='green-column'>
-                  <input type="text" class="custom-input" placeholder="Dropshipper Phone Number" />
-                </div>
-              </div>
-            </div>
-            <div class='row'>
-              <div class='column'>
-                <div class='blue-column'>
-                  <input type="text" class="custom-input" placeholder="Delivery Address" />
-                </div>
-              </div>
-            </div>
-          </div>
+        <div class="left_details">
+          <DeliveryDetails v-if="step === 'deliveryStep'" />
+          <PaymentDetails v-if="step === 'paymentStep'" />
+          <FinishDetails v-if="step === 'finishStep'" />
         </div>
         <div class="summary_details">
           <div class="summary_items">
@@ -64,7 +31,9 @@
               <span class="text_color">505.900</span>
             </div>
             <div>
-              <input type="button" class="custom-button" value="Continue to Payment">
+              <input v-if="step === 'deliveryStep'" type="button" class="custom-button" value="Continue to Payment" @click="nextStep('paymentStep')">
+              <input v-else-if="step === 'paymentStep'" type="button" class="custom-button" value="Pay with e-Wallet" @click="nextStep('finishStep')">
+              <!-- <input v-else type="button" class="custom-button" value="Continue to Payment" @click="nextStep('deliveryStep')"> -->
             </div>
           </div>
         </div>
@@ -73,14 +42,21 @@
   </div>
 </template>
 <script>
+import DeliveryDetails from '@/components/DeliveryDetails.vue'
 import StepperForm from '@/components/StepperForm.vue'
+import PaymentDetails from '@/components/PaymentDetails.vue'
+import FinishDetails from '@/components/FinishDetails.vue'
 export default {
   name: 'CheckoutForm',
   components: {
     StepperForm,
+    DeliveryDetails,
+    PaymentDetails,
+    FinishDetails
   },
   data() {
     return {
+      step: localStorage.getItem('step'),
       inputForm: [
         {
           type: 'text',
@@ -104,12 +80,27 @@ export default {
         }
       ]
     }
-  }
+  },
+  methods: {
+    nextStep(val) {
+      this.step = val
+      localStorage.setItem('step', this.step)
+      if (this.step === 'finishStep') {
+        localStorage.setItem('step', 'deliveryStep')
+      }
+    },
+    prevStep() {
+      
+    }
+  },
 }
 </script>
 <style lang="stylus" scoped>
+.back
+  &:hover
+    cursor pointer
 .checkout_form
-  margin 90px
+  margin 70px
   padding 40px
   background white
   border-radius 10px
@@ -119,18 +110,11 @@ export default {
   margin-top 30px
   display flex
   justify-content space-between
-.form_delivery
-  diplay flex
-  flex-direction column
-  width 100%
-  border-right 1px solid #FF8A00
-  margin-right 10px
-.delivery_details
-  width 90%
-  display flex
-  justify-content space-between
-  margin-bottom 20px
+.left_details
+  width 70%
 .summary_details
+  border-left 1px solid #FF8A00
+  padding-left 10px
   width 30%
   display flex
   flex-direction column
@@ -144,22 +128,6 @@ export default {
 .text_color
   color #FF8A00
   font-weight bold
-.form_details
-  width 100%
-  background blue
-  display flex
-  flex-direction column
-.custom-input
-  margin-bottom 10px
-  border 1px solid #ccc
-  padding 15px
-  font-size 20px
-  color #333
-  min-width 400px
-  height 60px
-  &:focus
-    outline none
-    border-color #ccc
 .custom-button
   margin-top 20px
   width 100%
@@ -171,14 +139,4 @@ export default {
   background #FF8A00
   &:hover
     cursor pointer
-.row
-  display: flex
-  flex-direction: row
-  flex-wrap: wrap
-  width: 100%
-.column
-  display: flex
-  flex-direction: column
-  flex-basis: 100%
-  flex: 1
 </style>
