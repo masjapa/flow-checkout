@@ -4,7 +4,7 @@
       <span class="text_color" style="font-size: 35px;">Shipment</span>
     </div>
     <div class="section">
-      <div v-for="(item, index) in shipment" :key="index" class="box" @click="addShipment(item.name)">
+      <div v-for="(item, index) in shipment" :key="index" class="box" @click="addShipment(item.name, item.price)">
         <div>
           {{ item.name }}
         </div>
@@ -64,11 +64,11 @@ export default {
     }
   },
   methods: {
-    addShipment(val) {
-      console.log(val)
+    addShipment(val, price) {
+      this.$emit('selected-shipment', val, price)
     },
     addPayment(val) {
-      console.log(val)
+      this.$emit('selected-payment', val)
     }
   },
 }
