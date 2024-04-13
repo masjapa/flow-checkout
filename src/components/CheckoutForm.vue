@@ -1,19 +1,19 @@
 <template>
   <div>
-    <div class="checkout_form">
-      <StepperForm />
-      <div class="back">
+    <div class="checkout-form">
+      <StepperForm :deliveryStep="isDeliver" :paymentStep="isPayment" :finishStep="isFinish" />
+      <div class="checkout-form__back">
         <span v-if="step === 'deliveryStep'">Back to cart</span>
         <span v-if="step === 'paymentStep'" @click="nextStep('deliveryStep')">Back to delivery</span>
       </div>
-      <div class="form_section">
-        <div class="left_details">
-          <DeliveryDetails v-if="step === 'deliveryStep'" @input="handleForm" @isDrop="handleDrop"/>
+      <div class="checkout-form__section">
+        <div class="checkout-form__left_details">
+          <DeliveryDetails v-if="step === 'deliveryStep' || step === null" @input="handleForm" @isDrop="handleDrop" @isPhoneValid="handlePhoneNumber" @isPhoneDropshipValid="handlePhoneNumberDropship"/>
           <PaymentDetails v-if="step === 'paymentStep'" @selected-shipment="handleShipment" @selected-payment="handlePayment" />
           <FinishDetails v-if="step === 'finishStep'" :code="deliveryCode" :deliver="shipment" />
         </div>
-        <div class="summary_details">
-          <div class="summary_items">
+        <div class="checkout-form__summary_details">
+          <div class="checkout-form__summary_items">
             <span class="text_color" style="font-size: 25px;">Summary</span>
             <span>10 Items Purchased</span>
             <hr />
@@ -40,25 +40,25 @@
               </div>
             </div>
           </div>
-          <div class="summary_items">
-            <div class="summary_sub">
+          <div class="checkout-form__summary_items">
+            <div class="checkout-form__summary_sub">
               <span>Cost of goods</span>
               <span style="font-weight: bold;">{{ costOfGoods }}</span>
             </div>
-            <div v-if="isDropship" class="summary_sub">
+            <div v-if="isDropship" class="checkout-form__summary_sub">
               <span>Dropshipping Fee</span>
               <span style="font-weight: bold;">{{ dropFee }}</span>
             </div>
-            <div v-if="step === 'paymentStep' || step === 'finishStep'" class="summary_sub">
+            <div v-if="step === 'paymentStep' || step === 'finishStep'" class="checkout-form__summary_sub">
               <span>{{ shipment }} Shipment</span>
               <span style="font-weight: bold;">{{ shipmentPrice }}</span>
             </div>
-            <div class="summary_sub" style="font-size: 25px; margin-top: 20px;">
+            <div class="checkout-form__summary_sub" style="font-size: 25px; margin-top: 20px;">
               <span class="text_color">Total</span>
               <span class="text_color">{{ total }}</span>
             </div>
             <div>
-              <input v-if="step === 'deliveryStep'" type="button" class="custom-button" value="Continue to Payment" @click="nextStep('paymentStep')">
+              <input v-if="step === 'deliveryStep' || step === null" type="button" class="custom-button" value="Continue to Payment" @click="nextStep('paymentStep')">
               <input v-else-if="step === 'paymentStep'" type="button" class="custom-button" :value="`Pay with ${shipment}`" @click="nextStep('finishStep')" :disabled="isPaymentForm">
             </div>
           </div>
@@ -92,8 +92,8 @@ export default {
       total: 0,
       inputForm: [
         {
-          type: 'text',
-          placeholder: 'Name'
+          type: 'email',
+          placeholder: 'Email'
         },
         {
           type: 'text',
@@ -113,11 +113,17 @@ export default {
         }
       ],
       value: {},
-      isDropship: false
+      isDropship: false,
+      isPhoneValid: false,
+      isDropshipPhoneValid: false,
+      isDeliver: true,
+      isPayment: false,
+      isFinish: false
     }
   },
   mounted() {
     this.total = this.costOfGoods
+    localStorage.setItem('step', 'deliveryStep')
   },
   computed: {
     isPaymentForm() {
@@ -130,14 +136,33 @@ export default {
   },
   methods: {
     nextStep(val) {
-      console.log(this.value)
+      if (val === 'deliveryStep') {
+        this.isDeliver = true
+      } else {
+        this.isDeliver = false
+      }
+      if (val === 'paymentStep') {
+        this.isPayment = true
+      } else {
+        this.isPayment = false
+      }
+      if (val === 'finishStep') {
+        this.isFinish = true
+      } else {
+        this.isFinish = false
+      }
+      localStorage.setItem('data_input', JSON.stringify(this.value))
+      const data = localStorage.getItem('data_input')
+      const parseData = JSON.parse(data)
       if (this.isDropship) {
         if (
-          this.value.name &&
-          this.value.dropshipper_name &&
-          this.value.phone_number &&
-          this.value.dropshipper_phone_number &&
-          this.value.address
+          parseData.email &&
+          parseData.dropshipper_name &&
+          parseData.phone_number &&
+          parseData.dropshipper_phone_number &&
+          parseData.address &&
+          localStorage.getItem('isPhoneValid') &&
+          localStorage.getItem('isPhoneDropValid')
         ) {
           this.step = val;
           localStorage.setItem('step', this.step);
@@ -147,13 +172,14 @@ export default {
             this.deliveryCode = randomCode;
           }
         } else {
-          alert('Please fill in all fields before continuing.');
+          alert('Silahkan isi semua Field terlebih dahulu.');
         }
       } else {
         if (
-          this.value.name &&
-          this.value.phone_number &&
-          this.value.address
+          parseData.email &&
+          parseData.phone_number &&
+          parseData.address &&
+          localStorage.getItem('isPhoneValid')
         ) {
           this.step = val;
           localStorage.setItem('step', this.step);
@@ -163,7 +189,7 @@ export default {
             this.deliveryCode = randomCode;
           }
         } else {
-          alert('Please fill in all fields except Dropshipper Name and Dropshipper Phone Number before continuing.');
+          alert('Silahkan isi semua field kecuali Dropshipper Name and Dropshipper Phone Number.');
         }
       }
     },
@@ -189,6 +215,14 @@ export default {
     handleForm(val) {
       this.value = val
     },
+    handlePhoneNumber(val) {
+      this.isPhoneValid = val
+      localStorage.setItem('isPhoneValid', val)
+    },
+    handlePhoneNumberDropship(val) {
+      this.isDropshipPhoneValid = val
+      localStorage.setItem('isPhoneDropValid', val)
+    },
     handleDrop(val) {
       if (val) {
         this.dropFee = 5900
@@ -202,33 +236,33 @@ export default {
 }
 </script>
 <style lang="stylus" scoped>
-.back
+.checkout-form__back
   &:hover
     cursor pointer
-.checkout_form
+.checkout-form
   margin 70px
   padding 40px
   background white
   border-radius 10px
   box-shadow 10px 20px 20px #979797
-.form_section
+.checkout-form__section
   height 500px
   margin-top 30px
   display flex
   justify-content space-between
-.left_details
+.checkout-form__left_details
   width 70%
-.summary_details
+.checkout-form__summary_details
   border-left 1px solid #FF8A00
   padding-left 10px
   width 30%
   display flex
   flex-direction column
   justify-content space-between
-.summary_items
+.checkout-form__summary_items
   display flex
   flex-direction column
-.summary_sub
+.checkout-form__summary_sub
   display flex
   justify-content space-between
 .text_color
