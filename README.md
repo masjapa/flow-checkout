@@ -1,4 +1,6 @@
 # techtest-jakmall
+# by Ariq Dary Prayogo
+# Technical Test FE Engineer
 
 ## Project setup
 ```
@@ -20,5 +22,8 @@ npm run build
 npm run lint
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### Node Ver 
+v14.21.1
+
+### npm ver
+6.14.17
