@@ -1,6 +1,5 @@
-# techtest-jakmall
+
 # by Ariq Dary Prayogo
-# Technical Test FE Engineer
 
 ## Project setup
 ```
